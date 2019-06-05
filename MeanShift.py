@@ -1,73 +1,70 @@
-import matplot.pyplot as plt
-from matplot import style
+import matplotlib.pyplot as plt
+from matplotlib import style
 style.use('ggplot')
 import numpy as np
 
-x = np.array([[1, 2],
+X = np.array([[1, 2],
               [1.5, 1.8],
-              [5, 8],
+              [5, 8 ],
               [8, 8],
               [1, 0.6],
-              [9, 11],
-              [8, 2],
-              [10, 2],
-              [9, 3]])
+              [9,11],
+              [8,2],
+              [10,2],
+              [9,3],])
 
-colors = 10*["g", "r", "c", "b", "k"]
+plt.scatter(X[:,0], X[:,1], s=150)
+plt.show()
+
+colors = 10*["g","r","c","b","k"]
 
 class Mean_Shift:
-    def __init__(self, bandwidth=4):
-        self.bandwidth = bandwidth
+    def __init__(self, radius=4):
+        self.radius = radius
 
     def fit(self, data):
         centroids = {}
 
         for i in range(len(data)):
             centroids[i] = data[i]
+        while True:
+            new_centroids = []
+            for i in centroids:
+                in_bandwidth = []
+                centroid = centroids[i]
+                for featureset in data:
+                    if np.linalg.norm(featureset - centroid) < self.radius:
+                        in_bandwidth.append(featureset)
 
-            while True:
-                new_centroids = []
-                for i in centroids:
-                        in_bandwidth = []
-                        centroids = centroids[i]
-                        for featureset in data:
-                            if np.linalg.norm(featureset-centroid) < self.bandwidth:
-                                in_bandwith.append(featureset)
+                new_centroid = np.average(in_bandwidth, axis=0)
+                new_centroids.append(tuple(new_centroid))
 
-                        new_centroids = np.average(in_bandwidth, axis=0)
-                        new_centroids.append(tuple(new_centroids))
+            uniques = sorted(list(set(new_centroids)))
+            prev_centroids = dict(centroids)
 
-                uniques = sorted(list(set(new_centroids)))
+            centroids = {}
+            for i in range(len(uniques)):
+                centroids[i] = np.array(uniques[i])
 
-                prev_centroid = dict(centroids)
+            optimized = True
 
-                centroids = {}
-                for i in range(len(uniques)):
-                    centroids[i] = np.array(uniques[i])
-
-                optimized = True
-
-                for i in centroids:
-                    if not np.array_equal(centroids[i], prev_centroid[i]):
-                        optimized = False
-
-                    if not optimized:
-                        break
-
-                if optimized:
+            for i in centroids:
+                if not np.array_equal(centroids[i], prev_centroids[i]):
+                    optimized = False
+                if not optimized:
                     break
 
-            self.centroids = centroids
+            if optimized:
+                break
 
-    def predict(self, data):
-        pass
+        self.centroids = centroids
 
 clf = Mean_Shift()
-clf.fit(x)
+clf.fit(X)
 
 centroids = clf.centroids
 
-plt.scatter(x[:,0], x[:,1], s=150)
+plt.scatter(X[:,0], X[:,1], s=150)
 
 for c in centroids:
     plt.scatter(centroids[c][0], centroids[c][1], color='k', marker='*', s=150)
